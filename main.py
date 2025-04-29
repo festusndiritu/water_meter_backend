@@ -62,6 +62,7 @@ async def set_valve(state: str):
     if state in ["open", "close"]:
         valve_command = state
         return {"status": "success", "valve": state}
+    print(f"POST /set_valve/{state}: Invalid state")
     raise HTTPException(status_code=400, detail="Invalid state")
 
 @app.get("/metrics")
