@@ -70,17 +70,22 @@ async def get_metrics():
     c = conn.cursor()
     
     # Today's usage
-    today = datetime.now().strftime("%Y-%m-%d")
-    c.execute("SELECT MAX(total_volume) - MIN(total_volume) FROM flow_data WHERE timestamp LIKE ?", (f"{today}%",))
+    today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+    tomorrow_start = (datetime.now() + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+    c.execute("SELECT MAX(total_volume) - MIN(total_volume) FROM flow_data WHERE timestamp >= ? AND timestamp < ?", (today_start, tomorrow_start))
     today_usage = c.fetchone()[0] or 0.0
+    # Debug: Count records for today
+    c.execute("SELECT COUNT(*) FROM flow_data WHERE timestamp >= ? AND timestamp < ?", (today_start, tomorrow_start))
+    today_count = c.fetchone()[0]
+    print(f"Today's records: {today_count}, Usage: {today_usage}")
     
     # Last 7 days
-    week_ago = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
+    week_ago = (datetime.now() - timedelta(days=7)).isoformat()
     c.execute("SELECT MAX(total_volume) - MIN(total_volume) FROM flow_data WHERE timestamp >= ?", (week_ago,))
     week_usage = c.fetchone()[0] or 0.0
     
     # Last 30 days
-    month_ago = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
+    month_ago = (datetime.now() - timedelta(days=30)).isoformat()
     c.execute("SELECT MAX(total_volume) - MIN(total_volume) FROM flow_data WHERE timestamp >= ?", (month_ago,))
     month_usage = c.fetchone()[0] or 0.0
     
